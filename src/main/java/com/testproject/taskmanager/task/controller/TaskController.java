@@ -5,6 +5,7 @@ import com.testproject.taskmanager.common.security.CustomUserDetails;
 import com.testproject.taskmanager.task.dto.TaskRequest;
 import com.testproject.taskmanager.task.model.Task;
 import com.testproject.taskmanager.task.service.TaskService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tasks")
+@SecurityRequirement(name = "bearerAuth")
 public class TaskController {
     private final TaskService taskService;
     public TaskController(TaskService taskService) {

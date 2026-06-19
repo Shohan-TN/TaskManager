@@ -49,6 +49,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGenericException(Exception ex) {
+        ex.printStackTrace();
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error",
                 new ErrorResponse(500, "INTERNAL_SERVER_ERROR", List.of("Something went wrong")));
     }
