@@ -34,14 +34,14 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        if (!jwtUtil.isTokenValid(token)) {
+        if (!jwtUtil.isAccessTokenValid(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid token");
             return;
         }
 
-        String username = jwtUtil.extractUsername(token);
-        Long userId = jwtUtil.extractUserId(token);
+        String username = jwtUtil.extractUsernameFromAccessToken(token);
+        Long userId = jwtUtil.extractUserIdFromAccessToken(token);
         CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, null, List.of());
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(customUserDetails, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(authentication);

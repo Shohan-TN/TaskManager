@@ -18,12 +18,14 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    private static final long REFRESH_EXPIRATION = 7 * 24 * 60 * 60 * 1000L;
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = io.jsonwebtoken.io.Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username, Long userId) {
+    public String generateAccessToken(String username, Long userId) {
         return Jwts.builder()
                 .subject(username)
                 .claim("user_id", userId)
@@ -33,15 +35,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    private Claims extractClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public boolean isTokenValid(String token) {
+    public boolean isAccessTokenValid(String token) {
         try {
             Claims claims = extractClaims(token);
             return !claims.getExpiration().before(new Date());
@@ -50,11 +44,52 @@ public class JwtUtil {
         }
     }
 
-    public String extractUsername(String token) {
+    public String extractUsernameFromAccessToken(String token) {
         return extractClaims(token).getSubject();
     }
-    public Long extractUserId(String token) {
+    public Long extractUserIdFromAccessToken(String token) {
         return extractClaims(token).get("user_id", Long.class);
+    }
+
+
+    public String generateRefreshToken(String username, Long userId) {
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
+                .claim("username", username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public boolean isRefreshTokenInValid(String token) {
+        try {
+            Claims claims = extractClaims(token);
+            return claims.getExpiration().before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public Long extractUserIdFromRefreshToken(String token) {
+        return Long.valueOf(extractClaims(token).getSubject());
+    }
+
+    public String extractUsernameFromRefreshToken(String token) {
+        return extractClaims(token).get("username", String.class);
+    }
+
+    public long getRefreshTokenRemainingMillis(String token) {
+        Date expiration = extractClaims(token).getExpiration();
+        return expiration.getTime() - System.currentTimeMillis();
+    }
+
+    private Claims extractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
 }
